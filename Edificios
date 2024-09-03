@@ -1,0 +1,87 @@
+import random
+import math
+
+# Matriz de distancias entre sitios
+a = [
+    [0, 340, 320, 400],
+    [340, 0, 360, 200],
+    [320, 360, 0, 180],
+    [400, 200, 180, 0]
+]
+
+# Matriz de conexiones entre edificios
+b = [
+    [0, 80, 40, 30],
+    [80, 0, 30, 20],
+    [40, 30, 0, 10],
+    [30, 20, 10, 0]
+]
+
+
+# Función para calcular el costo de una asignación
+def calcular_costo(asignacion, distancias, conexiones):
+    costo_total = 0
+    n = len(asignacion)
+    for i in range(n):
+        for j in range(n):
+            edificio_i = asignacion[i]
+            edificio_j = asignacion[j]
+            costo_total += distancias[i][j] * conexiones[edificio_i][edificio_j]
+    return costo_total
+
+
+# Función de probabilidad para aceptar una peor solución
+def probabilidad(energia_actual, energia_nueva, temperatura):
+    if energia_nueva < energia_actual:
+        return 1.0
+    else:
+        return math.exp((energia_actual - energia_nueva) / temperatura)
+
+
+# Algoritmo de recocido simulado para el problema de asignación cuadrática
+def recocido_simulado(temperatura_inicial, enfriamiento, iteraciones):
+    # Inicializar con una asignación aleatoria
+    solucion_actual = random.sample(range(4), 4)
+    mejor_solucion = solucion_actual[:]
+    temperatura = temperatura_inicial
+
+    for i in range(iteraciones):
+        # Generar una nueva solución vecina intercambiando dos edificios
+        nueva_solucion = solucion_actual[:]
+        i, j = random.sample(range(4), 2)
+        nueva_solucion[i], nueva_solucion[j] = nueva_solucion[j], nueva_solucion[i]
+
+        # Calcular el costo (energía) de la solución actual y la nueva solución
+        energia_actual = calcular_costo(solucion_actual, a, b)
+        energia_nueva = calcular_costo(nueva_solucion, a, b)
+
+        # Decidir si aceptamos la nueva solución
+        if probabilidad(energia_actual, energia_nueva, temperatura) > random.random():
+            solucion_actual = nueva_solucion
+
+        # Actualizar la mejor solución si la nueva solución es mejor
+        if calcular_costo(solucion_actual, a, b) < calcular_costo(mejor_solucion, a, b):
+            mejor_solucion = solucion_actual[:]
+
+        # Enfriar la temperatura
+        temperatura *= enfriamiento
+
+    return mejor_solucion, calcular_costo(mejor_solucion, a, b)
+
+
+# Parámetros de recocido simulado
+temperatura_inicial = 1000
+enfriamiento = 0.95
+iteraciones = 10000
+
+# Ejecutar el algoritmo de recocido simulado
+mejor_asignacion, mejor_costo = recocido_simulado(temperatura_inicial, enfriamiento, iteraciones)
+
+# Nombres para las posiciones y edificios
+nombres_edificios = ["A", "B", "C", "D"]
+nombres_sitios = ["a", "b", "c", "d"]
+mejor_asignacion_nombres = [nombres_sitios[i] for i in mejor_asignacion]
+
+# Imprimir los resultados
+print(f"La mejor asignación es: {mejor_asignacion_nombres}")
+print(f"El costo total es: {mejor_costo}")
