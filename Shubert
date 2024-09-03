@@ -1,0 +1,80 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+
+# Definición de la función de Shubert en 1D (para graficar como onda)
+def shubert_1d(x):
+    return sum([i * np.cos((i + 1) * x + i) for i in range(1, 6)])
+
+
+# Algoritmo de Hill Climbing para encontrar máximos y mínimos locales en 1D
+def hill_climbing_1d(starting_point, step_size, max_iterations, direction='max'):
+    current_point = starting_point
+    current_value = shubert_1d(current_point)
+
+    for i in range(max_iterations):
+        # Generar vecinos
+        if direction == 'max':
+            neighbors = [current_point + step_size, current_point - step_size]
+        elif direction == 'min':
+            neighbors = [current_point - step_size, current_point + step_size]
+
+        # Evaluar los vecinos
+        neighbor_values = [shubert_1d(n) for n in neighbors]
+
+        if direction == 'max':
+            # Encontrar el mejor vecino para maximización
+            best_value = max(neighbor_values)
+        elif direction == 'min':
+            # Encontrar el mejor vecino para minimización
+            best_value = min(neighbor_values)
+
+        best_index = neighbor_values.index(best_value)
+
+        if (direction == 'max' and best_value > current_value) or (direction == 'min' and best_value < current_value):
+            current_point = neighbors[best_index]
+            current_value = best_value
+        else:
+            break  # Si no hay mejora, detener la búsqueda
+
+    return current_point, current_value
+
+
+# Parámetros del algoritmo
+starting_points = np.linspace(-10, 10, 10)  # Varios puntos de inicio a lo largo de la función
+step_size = 0.01
+max_iterations = 1000
+
+# Ejecutar Hill Climbing desde diferentes puntos iniciales para encontrar máximos y mínimos
+maxima_points = []
+minima_points = []
+
+for sp in starting_points:
+    # Encontrar un máximo
+    max_point, max_value = hill_climbing_1d(sp, step_size, max_iterations, direction='max')
+    maxima_points.append((max_point, max_value))
+
+    # Encontrar un mínimo
+    min_point, min_value = hill_climbing_1d(sp, step_size, max_iterations, direction='min')
+    minima_points.append((min_point, min_value))
+
+# Crear la gráfica de la función de Shubert
+x = np.linspace(-10, 10, 1000)
+y = shubert_1d(x)
+
+plt.figure(figsize=(10, 6))
+plt.plot(x, y, 'k', label='Función de Shubert')
+
+# Marcar los máximos encontrados
+for max_point, max_value in maxima_points:
+    plt.plot(max_point, max_value, 'ro', markersize=8)
+
+# Marcar los mínimos encontrados
+for min_point, min_value in minima_points:
+    plt.plot(min_point, min_value, 'bo', markersize=8)
+
+plt.title('Función de Shubert con Máximos y Mínimos Locales - Hill Climbing')
+plt.xlabel('x')
+plt.ylabel('f(x)')
+plt.grid(True)
+plt.show()
