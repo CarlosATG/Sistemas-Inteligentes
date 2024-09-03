@@ -1,0 +1,77 @@
+import random
+import math
+
+
+def calcularConflictos(tablero):
+    # Contar el número de conflictos (ataques entre reinas)
+    conflictos = 0
+    n = len(tablero)
+
+    for i in range(n):
+        for j in range(i + 1, n):
+            if tablero[i] == tablero[j] or abs(tablero[i] - tablero[j]) == j - i:
+                conflictos += 1
+
+    return conflictos
+
+
+def generarVecino(tablero):
+    # Generar un vecino moviendo una reina a una nueva posición en la misma columna
+    n = len(tablero)
+    nuevo_tablero = tablero[:]
+    fila = random.randint(0, n - 1)
+    nueva_columna = random.randint(0, n - 1)
+
+    while nuevo_tablero[fila] == nueva_columna:
+        nueva_columna = random.randint(0, n - 1)
+
+    nuevo_tablero[fila] = nueva_columna
+    return nuevo_tablero
+
+
+def temperaturaInicial(conflictos):
+    return 2 * conflictos  # Escoger una temperatura inicial basada en los conflictos iniciales
+
+
+def probabilidadAceptacion(delta, temperatura):
+    return math.exp(-delta / temperatura)
+
+
+def resolverOchoReinasSimulatedAnnealing(n, max_iter=10000):
+    # Iniciar con un tablero aleatorio
+    tablero = [random.randint(0, n - 1) for _ in range(n)]
+    conflictos_actuales = calcularConflictos(tablero)
+    temperatura = temperaturaInicial(conflictos_actuales)
+    iteraciones = 0
+
+    for i in range(max_iter):
+        iteraciones += 1
+
+        if conflictos_actuales == 0:
+            print(f"Solución encontrada después de {iteraciones} iteraciones.")
+            return tablero
+
+        vecino = generarVecino(tablero)
+        conflictos_vecino = calcularConflictos(vecino)
+        delta = conflictos_vecino - conflictos_actuales
+
+        if delta < 0 or random.random() < probabilidadAceptacion(delta, temperatura):
+            tablero = vecino
+            conflictos_actuales = conflictos_vecino
+
+        temperatura *= 0.99  # Disminuir la temperatura gradualmente
+
+    print(f"No se encontró una solución óptima después de {iteraciones} iteraciones.")
+    return tablero  # Devuelve la mejor solución encontrada
+
+
+# Ejecutar la resolución para el problema de las 8 reinas
+n = 8
+solucion = resolverOchoReinasSimulatedAnnealing(n)
+
+# Mostrar el tablero resultante
+print("Solución final:")
+for i in range(n):
+    fila = ["."] * n
+    fila[solucion[i]] = "Q"
+    print(" ".join(fila))
